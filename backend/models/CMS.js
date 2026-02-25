@@ -15,10 +15,25 @@ const cmsSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Content is required']
     },
+    status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    approvedAt: {
+        type: Date
+    },
+    rejectionReason: {
+        type: String
     },
     createdAt: {
         type: Date,

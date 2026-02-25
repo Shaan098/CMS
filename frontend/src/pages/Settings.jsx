@@ -1,137 +1,165 @@
 import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import ParticlesBackground from '../components/ParticlesBackground';
 import { getSettings, updateSetting, deleteSetting } from '../services/settingsService';
+import { useNotification } from '../context/NotificationContext';
+import Layout from '../components/Layout';
+import { motion } from 'framer-motion';
+import { Settings as SettingsIcon, Plus, X, Save, Shield, Cpu, Database } from 'lucide-react';
+import { Reveal, StaggerContainer, StaggerItem } from '../components/animations/MotionWrapper';
 
 const Settings = () => {
     const [settings, setSettings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [formData, setFormData] = useState({ key: '', value: '', description: '' });
+    const { showNotification } = useNotification();
+    const [newSetting, setNewSetting] = useState({ key: '', value: '', description: '' });
 
-    useEffect(() => {
-        fetchSettings();
-    }, []);
-
+    useEffect(() => { fetchSettings(); }, []);
     const fetchSettings = async () => {
-        try {
-            const data = await getSettings();
-            setSettings(data.settings || []);
-        } catch (error) {
-            console.error('Error fetching settings:', error);
-        }
+        try { const res = await getSettings(); setSettings(res.settings || res.data || []); }
+        catch { showNotification('Failed to load system settings', 'error'); }
         setLoading(false);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleUpdate = async (settingData) => {
         try {
-            await updateSetting(formData);
-            setFormData({ key: '', value: '', description: '' });
+            await updateSetting(settingData);
+            showNotification('Config synchronized with core logic', 'success');
             fetchSettings();
-        } catch (error) {
-            alert('Error updating setting');
-        }
+            if (!settingData._id) setNewSetting({ key: '', value: '', description: '' });
+        } catch { showNotification('Config update failed', 'error'); }
     };
 
     const handleDelete = async (key) => {
-        if (window.confirm('Delete this setting?')) {
-            try {
-                await deleteSetting(key);
-                fetchSettings();
-            } catch (error) {
-                alert('Error deleting setting');
-            }
-        }
+        if (!window.confirm('Are you sure you want to delete this setting?')) return;
+        try {
+            await deleteSetting(key);
+            showNotification('Setting purged from system archives', 'success');
+            fetchSettings();
+        } catch { showNotification('Delete failed', 'error'); }
     };
 
+    if (loading) return <Layout title="System Core">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+            <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                style={{ width: '40px', height: '40px', border: '3px solid var(--color-primary)', borderTopColor: 'transparent', borderRadius: '50%' }}
+            />
+        </div>
+    </Layout>;
+
     return (
-        <>
-            <Navbar />
-            <ParticlesBackground />
-
-            <div className="container fade-in">
-                <h1 className="text-gradient mb-lg" style={{ fontSize: '3rem', marginTop: 'var(--spacing-xl)' }}>
-                    ⚙️ System Settings
-                </h1>
-
-                <div className="glass-card mb-lg" style={{ padding: 'var(--spacing-xl)' }}>
-                    <h2 className="text-gradient mb-md">Add/Update Setting</h2>
-                    <form onSubmit={handleSubmit}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-                            <div className="input-group">
-                                <label className="input-label">Key</label>
-                                <input
-                                    type="text"
-                                    className="input-field"
-                                    placeholder="setting_key"
-                                    value={formData.key}
-                                    onChange={(e) => setFormData({ ...formData, key: e.target.value })}
-                                    required
-                                />
-                            </div>
-                            <div className="input-group">
-                                <label className="input-label">Value</label>
-                                <input
-                                    type="text"
-                                    className="input-field"
-                                    placeholder="setting_value"
-                                    value={formData.value}
-                                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="input-group">
-                            <label className="input-label">Description (Optional)</label>
-                            <input
-                                type="text"
-                                className="input-field"
-                                placeholder="Description..."
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            />
-                        </div>
-                        <button type="submit" className="btn btn-primary">💾 Save Setting</button>
-                    </form>
+        <Layout title="Core Configurations">
+            <Reveal>
+                <div style={{ marginBottom: '3rem', display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'var(--color-secondary)05', padding: '2rem', borderRadius: '24px', border: '1px solid var(--color-secondary)20' }}>
+                    <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '16px',
+                        background: 'var(--color-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#000',
+                        boxShadow: 'var(--glow-secondary)'
+                    }}>
+                        <Cpu size={28} />
+                    </div>
+                    <div>
+                        <h2 style={{ fontSize: '1.75rem', fontWeight: 800 }}>System Parameters</h2>
+                        <p style={{ color: 'var(--color-text-secondary)' }}>
+                            Modifying <span style={{ color: 'var(--color-secondary)', fontWeight: 700 }}>{settings.length}</span> active hardware-logic hooks.
+                        </p>
+                    </div>
                 </div>
+            </Reveal>
 
-                {loading ? (
-                    <div className="spinner"></div>
-                ) : (
-                    <div className="glass-card" style={{ padding: 'var(--spacing-lg)' }}>
-                        <h2 className="text-gradient mb-md">Current Settings</h2>
-                        {settings.length === 0 ? (
-                            <p style={{ color: 'var(--color-text-muted)' }}>No settings configured</p>
-                        ) : (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-                                {settings.map((setting) => (
-                                    <div key={setting._id} style={{
-                                        padding: 'var(--spacing-md)',
-                                        background: 'rgba(255, 255, 255, 0.03)',
-                                        borderRadius: 'var(--radius-sm)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <div>
-                                            <strong style={{ color: 'var(--color-accent-primary)' }}>{setting.key}</strong>
-                                            <p style={{ color: 'var(--color-text-secondary)', margin: '0.25rem 0' }}>Value: {setting.value}</p>
-                                            {setting.description && (
-                                                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>{setting.description}</p>
-                                            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '3rem' }}>
+                <Reveal delay={0.1}>
+                    <div className="card" style={{ padding: '2.5rem', position: 'sticky', top: '2rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+                            <Plus size={20} style={{ color: 'var(--color-primary)' }} />
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Initialize Hook</h3>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                            <div className="input-container">
+                                <label className="input-label" style={{ position: 'static', transform: 'none', color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Key Identifier</label>
+                                <input type="text" className="input-field" value={newSetting.key} onChange={(e) => setNewSetting({ ...newSetting, key: e.target.value })} placeholder="e.g. LOG_LEVEL" />
+                            </div>
+                            <div className="input-container">
+                                <label className="input-label" style={{ position: 'static', transform: 'none', color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Value Signal</label>
+                                <input type="text" className="input-field" value={newSetting.value} onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })} placeholder="Target value..." />
+                            </div>
+                            <div className="input-container">
+                                <label className="input-label" style={{ position: 'static', transform: 'none', color: 'var(--color-text-secondary)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Documentation</label>
+                                <input type="text" className="input-field" value={newSetting.description} onChange={(e) => setNewSetting({ ...newSetting, description: e.target.value })} placeholder="Brief purpose..." />
+                            </div>
+                            <button
+                                onClick={() => handleUpdate(newSetting)}
+                                className="btn btn-primary"
+                                style={{ width: '100%', padding: '1rem', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                                <Save size={18} /> Synchronize Config
+                            </button>
+                        </div>
+                    </div>
+                </Reveal>
+
+                <StaggerContainer staggerChildren={0.1}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {settings.map(s => (
+                            <StaggerItem key={s.key}>
+                                <div className="card" style={{ padding: '1.75rem', border: '1px solid var(--color-border)', position: 'relative' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: 'var(--glow-primary)' }}></div>
+                                            <div style={{ fontWeight: '800', color: 'var(--color-primary)', fontSize: '0.9rem', letterSpacing: '0.05em' }}>{s.key}</div>
                                         </div>
-                                        <button onClick={() => handleDelete(setting.key)} className="btn" style={{ padding: '0.5rem 1rem', background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' }}>
-                                            🗑️ Delete
+                                        <button
+                                            onClick={() => handleDelete(s.key)}
+                                            style={{
+                                                color: 'var(--color-text-secondary)',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                border: '1px solid var(--color-border)',
+                                                cursor: 'pointer',
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-error)'; e.currentTarget.style.borderColor = 'var(--color-error)40'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+                                        >
+                                            <X size={14} />
                                         </button>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <div style={{ position: 'relative' }}>
+                                        <Database size={14} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-primary)', opacity: 0.5 }} />
+                                        <input
+                                            className="input-field"
+                                            value={s.value}
+                                            onChange={(e) => {
+                                                const newSet = settings.map(item => item.key === s.key ? { ...item, value: e.target.value } : item);
+                                                setSettings(newSet);
+                                            }}
+                                            onBlur={() => handleUpdate(s)}
+                                            style={{ background: 'rgba(255,255,255,0.02)', paddingRight: '2.5rem' }}
+                                        />
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '1rem', fontStyle: 'italic' }}>
+                                        {s.description || 'System-protected parameter.'}
+                                    </div>
+                                </div>
+                            </StaggerItem>
+                        ))}
                     </div>
-                )}
+                </StaggerContainer>
             </div>
-        </>
+        </Layout>
     );
 };
 
 export default Settings;
+

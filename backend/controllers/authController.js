@@ -13,13 +13,19 @@ const generateToken = (userId) => {
 // @access  Public
 const register = async (req, res) => {
     try {
+        console.log('📥 Registration request received:', req.body);
         const { name, email, password, role } = req.body;
 
         // Validation
         if (!name || !email || !password) {
+            const missing = [];
+            if (!name) missing.push('name');
+            if (!email) missing.push('email');
+            if (!password) missing.push('password');
+
             return res.status(400).json({
                 success: false,
-                message: 'Please provide all required fields'
+                message: `Missing fields: ${missing.join(', ')}`
             });
         }
 
@@ -51,7 +57,21 @@ const register = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Register error:', error);
+        console.error('❌ Register error:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            code: error.code
+        });
+
+        // Handle specific MongoDB errors
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email already exists'
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Server error during registration',
@@ -108,7 +128,11 @@ const login = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('❌ Login error:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message
+        });
         res.status(500).json({
             success: false,
             message: 'Server error during login',

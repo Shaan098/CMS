@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
-import { login as loginService, logout as logoutService, getCurrentUser, isAuthenticated } from '../services/authService';
+import { login as loginService, register as registerService, logout as logoutService, getCurrentUser, isAuthenticated } from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -37,6 +37,23 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Register function
+    const register = async (userData) => {
+        try {
+            const data = await registerService(userData);
+            if (data.success) {
+                setUser(data.user);
+                return { success: true };
+            }
+            return { success: false, message: data.message };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Registration failed'
+            };
+        }
+    };
+
     // Logout function
     const logout = () => {
         logoutService();
@@ -52,6 +69,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        register,
         logout,
         isAdmin,
         isAuthenticated: () => !!user
@@ -70,3 +88,4 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
+

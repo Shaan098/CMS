@@ -1,147 +1,160 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import ParticlesBackground from '../components/ParticlesBackground';
-import { createCMS, updateCMS } from '../services/cmsService';
+import { useNavigate, useParams } from 'react-router-dom';
+import { createCMS, getCMSById, updateCMS } from '../services/cmsService';
+import { useNotification } from '../context/NotificationContext';
+import Layout from '../components/Layout';
+import { motion } from 'framer-motion';
+import {
+    Save,
+    X,
+    ChevronLeft,
+    Type,
+    AlignLeft,
+    FileText,
+    Sparkles
+} from 'lucide-react';
+import { Reveal } from '../components/animations/MotionWrapper';
 
 const CMSForm = () => {
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [content, setContent] = useState('');
     const { id } = useParams();
-    const location = useLocation();
     const navigate = useNavigate();
-    const isEdit = !!id;
-
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        content: ''
-    });
+    const { showNotification } = useNotification();
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     useEffect(() => {
-        if (isEdit && location.state?.cms) {
-            setFormData({
-                title: location.state.cms.title,
-                description: location.state.cms.description,
-                content: location.state.cms.content
+        if (id) {
+            setLoading(true);
+            getCMSById(id).then(res => {
+                const data = res.data;
+                setTitle(data.title);
+                setDescription(data.description || '');
+                setContent(data.content);
+                setLoading(false);
+            }).catch(() => {
+                showNotification('Failed to load content', 'error');
+                navigate('/cms');
             });
         }
-    }, [isEdit, location.state]);
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+    }, [id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
-
         try {
-            if (isEdit) {
-                await updateCMS(id, formData);
+            const payload = { title, description, content };
+            if (id) {
+                await updateCMS(id, payload);
+                showNotification('Content updated successfully', 'success');
             } else {
-                await createCMS(formData);
+                await createCMS(payload);
+                showNotification('Content submitted successfully', 'success');
             }
             navigate('/cms');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Operation failed');
-        }
-
-        setLoading(false);
+        } catch { showNotification('Failed to save content', 'error'); }
     };
 
     return (
-        <>
-            <Navbar />
-            <ParticlesBackground />
+        <Layout title={id ? 'Edit Entry' : 'Create Entry'}>
+            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+                <Reveal>
+                    <button
+                        onClick={() => navigate('/cms')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--color-text-secondary)',
+                            marginBottom: '2rem',
+                            fontSize: '0.9rem',
+                            fontWeight: 600
+                        }}
+                        className="nav-link"
+                    >
+                        <ChevronLeft size={16} /> Back to Library
+                    </button>
+                </Reveal>
 
-            <div className="container fade-in">
-                <div style={{ maxWidth: '800px', margin: '0 auto', marginTop: 'var(--spacing-xl)' }}>
-                    <h1 className="text-gradient mb-lg" style={{ fontSize: '3rem' }}>
-                        {isEdit ? '✏️ Edit Content' : '✨ Create Content'}
-                    </h1>
-
-                    {error && (
-                        <div style={{
-                            padding: 'var(--spacing-sm)',
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            borderRadius: 'var(--radius-sm)',
-                            marginBottom: 'var(--spacing-md)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            color: '#fca5a5'
-                        }}>
-                            ⚠️ {error}
+                <Reveal delay={0.1}>
+                    <div style={{ marginBottom: '3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <div style={{
+                                padding: '0.6rem',
+                                borderRadius: '12px',
+                                background: 'var(--color-primary)15',
+                                color: 'var(--color-primary)'
+                            }}>
+                                <Sparkles size={24} />
+                            </div>
+                            <h2 style={{ fontSize: '2.5rem', fontWeight: 800 }}>{id ? 'Refine Archive' : 'New Transmission'}</h2>
                         </div>
-                    )}
+                        <p style={{ color: 'var(--color-text-secondary)', fontSize: '1.1rem' }}>
+                            {id ? 'Modify your existing synchronization records.' : 'Initialize a new content node in the ecosystem.'}
+                        </p>
+                    </div>
+                </Reveal>
 
-                    <form onSubmit={handleSubmit} className="glass-card" style={{ padding: 'var(--spacing-xl)' }}>
-                        <div className="input-group">
-                            <label className="input-label">Title</label>
+                <Reveal delay={0.2} width="100%">
+                    <form onSubmit={handleSubmit} className="card" style={{ padding: '3rem' }}>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                                <Type size={16} /> Entry Title
+                            </label>
                             <input
                                 type="text"
-                                name="title"
                                 className="input-field"
-                                placeholder="Enter title..."
-                                value={formData.title}
-                                onChange={handleChange}
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
                                 required
+                                placeholder="Quantum Core Dynamics..."
                             />
                         </div>
 
-                        <div className="input-group">
-                            <label className="input-label">Description</label>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                                <AlignLeft size={16} /> Short Description
+                            </label>
                             <input
                                 type="text"
-                                name="description"
                                 className="input-field"
-                                placeholder="Brief description..."
-                                value={formData.description}
-                                onChange={handleChange}
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
                                 required
+                                placeholder="A brief summary of this synchronization..."
                             />
                         </div>
 
-                        <div className="input-group">
-                            <label className="input-label">Content</label>
+                        <div style={{ marginBottom: '3rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                                <FileText size={16} /> Core Content
+                            </label>
                             <textarea
-                                name="content"
                                 className="input-field"
-                                placeholder="Write your content here..."
-                                value={formData.content}
-                                onChange={handleChange}
+                                style={{ minHeight: '350px', resize: 'vertical' }}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
                                 required
-                                rows={12}
-                                style={{ resize: 'vertical' }}
+                                placeholder="Enter the primary payload data here..."
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                style={{ flex: 1 }}
-                                disabled={loading}
-                            >
-                                {loading ? '🔄 Saving...' : isEdit ? '💾 Update' : '✨ Create'}
+                        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '2rem' }}>
+                            <button type="button" onClick={() => navigate('/cms')} className="btn">
+                                <X size={18} style={{ marginRight: '0.5rem' }} /> Cancel
                             </button>
-                            <button
-                                type="button"
-                                onClick={() => navigate('/cms')}
-                                className="btn btn-outline"
-                                style={{ flex: 1 }}
-                            >
-                                ❌ Cancel
+                            <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem 2.5rem' }}>
+                                <Save size={18} style={{ marginRight: '0.5rem' }} /> {id ? 'Save Changes' : 'Initialize Node'}
                             </button>
                         </div>
                     </form>
-                </div>
+                </Reveal>
             </div>
-        </>
+        </Layout>
     );
 };
 
 export default CMSForm;
+

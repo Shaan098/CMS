@@ -1,162 +1,120 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../services/authService';
-import ParticlesBackground from '../components/ParticlesBackground';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+import { motion } from 'framer-motion';
+import { User, Mail, Lock, UserPlus, Sparkles } from 'lucide-react';
 
 const Register = () => {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        role: 'User'
-    });
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const { register } = useAuth();
     const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+    const { showNotification } = useNotification();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setLoading(true);
-
         try {
-            const result = await register(formData);
-
-            if (result.success) {
-                setSuccess(true);
-                setTimeout(() => {
-                    navigate('/');
-                }, 2000);
+            console.log('📤 Submitting registration node:', formData);
+            const res = await register(formData);
+            if (res.success) {
+                showNotification('Account initialized successfully', 'success');
+                navigate('/dashboard');
             } else {
-                setError(result.message || 'Registration failed');
+                showNotification(res.message, 'error');
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Registration failed');
+            showNotification(err.response?.data?.message || 'Synchronization failed', 'error');
         }
-
-        setLoading(false);
     };
 
     return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-md)' }}>
-            <ParticlesBackground />
-
-            <div className="glass-card scale-in" style={{ maxWidth: '500px', width: '100%', padding: 'var(--spacing-xl)' }}>
-                <h1 className="text-center mb-md" style={{ fontSize: '2.5rem' }}>
-                    <span className="text-gradient">Join Us</span>
-                </h1>
-                <p className="text-center mb-xl" style={{ color: 'var(--color-text-secondary)' }}>
-                    Create your CMS account
-                </p>
-
-                {error && (
-                    <div style={{
-                        padding: 'var(--spacing-sm)',
-                        background: 'rgba(239, 68, 68, 0.1)',
-                        borderRadius: 'var(--radius-sm)',
-                        marginBottom: 'var(--spacing-md)',
-                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                        color: '#fca5a5'
-                    }}>
-                        ⚠️ {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div style={{
-                        padding: 'var(--spacing-sm)',
-                        background: 'rgba(34, 197, 94, 0.1)',
-                        borderRadius: 'var(--radius-sm)',
-                        marginBottom: 'var(--spacing-md)',
-                        border: '1px solid rgba(34, 197, 94, 0.3)',
-                        color: '#86efac'
-                    }}>
-                        ✅ Registration successful! Redirecting to login...
-                    </div>
-                )}
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)', padding: '1rem' }}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                className="card"
+                style={{ width: '100%', maxWidth: '480px', padding: '3.5rem' }}
+            >
+                <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                    <motion.div
+                        initial={{ rotate: 20, scale: 0.8 }}
+                        animate={{ rotate: 0, scale: 1 }}
+                        transition={{ delay: 0.3, duration: 0.5, type: "spring" }}
+                        style={{
+                            width: '64px',
+                            height: '64px',
+                            background: 'var(--color-secondary)',
+                            borderRadius: '16px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 1.5rem',
+                            color: '#000',
+                            boxShadow: 'var(--glow-secondary)'
+                        }}
+                    >
+                        <Sparkles size={32} />
+                    </motion.div>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-1px' }}>New Existence</h1>
+                    <p style={{ color: 'var(--color-text-secondary)', fontSize: '1rem', marginTop: '0.5rem' }}>Define your node profile below.</p>
+                </div>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <label className="input-label">Full Name</label>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <User size={16} /> Public Identity
+                        </label>
                         <input
                             type="text"
-                            name="name"
                             className="input-field"
-                            placeholder="John Doe"
                             value={formData.name}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
+                            placeholder="John Doe"
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label className="input-label">Email Address</label>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <Mail size={16} /> Spectral Email
+                        </label>
                         <input
                             type="email"
-                            name="email"
                             className="input-field"
-                            placeholder="you@example.com"
                             value={formData.email}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             required
+                            placeholder="user@ecosystem.net"
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label className="input-label">Password</label>
+                    <div style={{ marginBottom: '3rem' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: 'var(--color-text-secondary)', fontSize: '0.9rem', fontWeight: 600 }}>
+                            <Lock size={16} /> Encryption Key
+                        </label>
                         <input
                             type="password"
-                            name="password"
                             className="input-field"
-                            placeholder="••••••••"
                             value={formData.password}
-                            onChange={handleChange}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             required
-                            minLength={6}
+                            placeholder="••••••••"
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label className="input-label">Role</label>
-                        <select
-                            name="role"
-                            className="input-field"
-                            value={formData.role}
-                            onChange={handleChange}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            <option value="User">User</option>
-                            <option value="Admin">Admin</option>
-                        </select>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        style={{ width: '100%', marginTop: 'var(--spacing-md)' }}
-                        disabled={loading || success}
-                    >
-                        {loading ? '🔄 Registering...' : '✨ Create Account'}
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'var(--color-secondary)', borderColor: 'var(--color-secondary)' }}>
+                        <UserPlus size={18} style={{ marginRight: '0.5rem' }} /> Create Node
                     </button>
                 </form>
 
-                <p className="text-center mt-md" style={{ color: 'var(--color-text-muted)' }}>
-                    Already have an account?{' '}
-                    <Link to="/" style={{ color: 'var(--color-accent-primary)', textDecoration: 'none', fontWeight: '600' }}>
-                        Login here
-                    </Link>
-                </p>
-            </div>
+                <div style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.95rem', color: 'var(--color-text-secondary)' }}>
+                    Established? <Link to="/" style={{ color: 'var(--color-secondary)', textDecoration: 'none', fontWeight: '700' }}>Synchronize Link</Link>
+                </div>
+            </motion.div>
         </div>
     );
 };
 
 export default Register;
+
