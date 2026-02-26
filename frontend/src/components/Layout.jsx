@@ -1,39 +1,43 @@
-import Sidebar from './Sidebar';
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-const Layout = ({ children, title }) => {
-    const location = useLocation();
-    const [animate, setAnimate] = useState(false);
+const links = [
+  { to: '/', label: 'Dashboard' },
+  { to: '/content', label: 'Content' },
+  { to: '/approvals', label: 'Approvals' },
+  { to: '/media', label: 'Media' },
+  { to: '/reports', label: 'Reports' },
+  { to: '/settings', label: 'Settings' },
+  { to: '/users', label: 'Users' }
+];
 
-    useEffect(() => {
-        setAnimate(false);
-        const timer = setTimeout(() => setAnimate(true), 10);
-        return () => clearTimeout(timer);
-    }, [location.pathname]);
+const Layout = () => {
+  const location = useLocation();
+  const { user, logout } = useAuth();
 
-    return (
-        <div className="app-layout">
-            <Sidebar />
-            <main className="main-content">
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                    <h2 style={{ fontSize: '1.6rem', fontWeight: '800' }}>
-                        {title || 'Dashboard'}
-                    </h2>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
-                        <button className="btn" style={{ padding: '0.6rem', borderRadius: '8px' }}>🔔</button>
-                        <button className="btn" style={{ padding: '0.6rem', borderRadius: '8px' }}>⚙️</button>
-                    </div>
-                </header>
-                <div style={{
-                    transition: 'opacity 0.4s ease-out',
-                    opacity: animate ? 1 : 0
-                }}>
-                    {children}
-                </div>
-            </main>
-        </div>
-    );
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="brand">CMS</div>
+        {links.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={location.pathname === item.to ? 'active' : ''}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </aside>
+      <main className="main">
+        <header className="topbar">
+          <div className="topbar-user">{user?.name} ({user?.role})</div>
+          <button onClick={logout}>Logout</button>
+        </header>
+        <Outlet />
+      </main>
+    </div>
+  );
 };
 
 export default Layout;

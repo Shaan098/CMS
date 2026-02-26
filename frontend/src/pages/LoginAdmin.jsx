@@ -2,35 +2,30 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Register = () => {
-  const { register } = useAuth();
+const LoginAdmin = () => {
+  const { loginAdmin } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
       setError('');
-      await register(form.name, form.email, form.password);
+      await loginAdmin(form.email, form.password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Admin login failed');
     }
   };
 
   return (
     <div className="auth-wrap">
       <form className="card" onSubmit={onSubmit}>
-        <h2 className="auth-title">Register</h2>
-        <p className="muted">Create an account to access the CMS.</p>
+        <h2 className="auth-title">Admin Login</h2>
+        <p className="muted">Sign in with an admin account.</p>
         <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-        />
-        <input
-          placeholder="Email"
+          placeholder="Admin Email"
           type="email"
           value={form.email}
           onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
@@ -42,13 +37,13 @@ const Register = () => {
           onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
         />
         {error && <p className="error">{error}</p>}
-        <button type="submit">Create Account</button>
+        <button type="submit">Sign In as Admin</button>
         <p className="muted">
-          Already have one? <Link to="/login">Login</Link>
+          Not an admin? <Link to="/login/user">Go to User Login</Link>
         </p>
       </form>
     </div>
   );
 };
 
-export default Register;
+export default LoginAdmin;
