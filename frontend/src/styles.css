@@ -3,6 +3,96 @@
   color: #0f172a;
   background: #f8fafc;
 }
+/* ...existing code... */
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --radius: 12px;
+  --radius-sm: 10px;
+  --shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.container,
+main,
+.page {
+  width: min(1100px, 92%);
+  margin-inline: auto;
+}
+
+.card,
+.panel,
+section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+
+button,
+.btn,
+input[type="submit"],
+input[type="button"] {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover,
+.btn:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background: var(--primary-hover);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+  padding: 0.6rem 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .container,
+  main,
+  .page {
+    width: 94%;
+  }
+}
+
+/* ...existing code... */
 
 * {
   box-sizing: border-box;
