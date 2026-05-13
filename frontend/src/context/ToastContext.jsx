@@ -6,9 +6,9 @@ export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback((message, options = {}) => {
-    const { type = 'success', timeout = 4000 } = options;
+    const { type = 'success', timeout = 4000, action } = options;
     const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message, type }]);
+    setToasts((t) => [...t, { id, message, type, action }]);
 
     if (timeout > 0) {
       setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), timeout);

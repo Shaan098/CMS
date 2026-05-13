@@ -432,6 +432,45 @@ form.card {
   cursor: pointer;
 }
 
+.toast-action {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+mark {
+  background: #fef08a;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.45);
+  display: grid;
+  place-items: center;
+  z-index: 9998;
+}
+.modal {
+  background: var(--surface);
+  padding: 16px;
+  border-radius: 12px;
+  min-width: 320px;
+  box-shadow: var(--shadow);
+}
+
+/* Drag drop */
+.card.dragover, .card.dragover * { }
+.card.dragover { border: 2px dashed #93c5fd; }
+.drop-hint { color: var(--muted); font-size: 13px; }
+
+.progress { background: var(--bg-accent); border-radius: 99px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg,var(--primary),var(--primary-hover)); }
+
 .auth-wrap {
   min-height: 100vh;
   display: grid;
