@@ -1,37 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 const initialForm = { title: '', body: '', type: 'post' };
 
 const ContentPage = () => {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(initialForm);
+  const [search, setSearch] = useState('');
+  const { addToast } = useToast();
 
   const load = async () => {
-    const { data } = await api.get('/content');
-    setItems(data);
+    try {
+      const { data } = await api.get('/content');
+      setItems(data);
+    } catch (err) {
+      addToast('Failed to load content', { type: 'error' });
+    }
   };
 
   useEffect(() => {
     load();
   }, []);
 
+  // Poll for live updates every 8 seconds
+  useEffect(() => {
+    const id = setInterval(() => {
+      load();
+    }, 8000);
+    return () => clearInterval(id);
+  }, []);
+
   const createItem = async (e) => {
     e.preventDefault();
-    await api.post('/content', form);
-    setForm(initialForm);
-    load();
+    try {
+      await api.post('/content', form);
+      setForm(initialForm);
+      load();
+      addToast('Draft saved', { type: 'success' });
+    } catch (err) {
+      addToast('Failed to save draft', { type: 'error' });
+    }
   };
 
   const submit = async (id) => {
-    await api.post(`/content/${id}/submit`);
-    load();
+    try {
+      await api.post(`/content/${id}/submit`);
+      load();
+      addToast('Content submitted for review', { type: 'success' });
+    } catch (err) {
+      addToast('Failed to submit', { type: 'error' });
+    }
   };
 
   const remove = async (id) => {
-    await api.delete(`/content/${id}`);
-    load();
+    try {
+      await api.delete(`/content/${id}`);
+      load();
+      addToast('Content deleted', { type: 'success' });
+    } catch (err) {
+      addToast('Delete failed', { type: 'error' });
+    }
   };
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((i) => {
+      return (
+        (i.title || '').toLowerCase().includes(q) ||
+        (i.body || '').toLowerCase().includes(q) ||
+        (i.type || '').toLowerCase().includes(q) ||
+        (i.status || '').toLowerCase().includes(q)
+      );
+    });
+  }, [items, search]);
 
   return (
     <div className="page">
@@ -60,9 +103,12 @@ const ContentPage = () => {
         </form>
 
         <div className="card">
-          <h3>All Content</h3>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12}}>
+              <h3>All Content</h3>
+              <input placeholder="Search content..." value={search} onChange={(e) => setSearch(e.target.value)} style={{maxWidth: 260}} />
+            </div>
           {items.length === 0 && <p className="empty">No content yet.</p>}
-          {items.map((item) => (
+            {filtered.map((item) => (
             <div key={item._id} className="list-item">
               <div>
                 <div className="item-title">
